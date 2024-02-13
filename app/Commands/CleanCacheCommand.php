@@ -17,14 +17,14 @@ class CleanCacheCommand extends BaseCommand
      */
     protected $signature = 'cache:clean
                             {--force : Force delete all files in the cache directory regardless of age.}
-                            {--expires-minutes=1440 : Custom age of minutes for files that should be deleted. Default: 1440 }';
+                            {--expires-minutes= : Custom age of minutes for files that should be deleted. Default: 1440 }';
 
     /**
      * The description of the command.
      *
      * @var string
      */
-    protected $description = 'Cleanup the cache directory of compiled files older than the expired age.';
+    protected $description = 'Cleanup the cache directory of compiled files older than the configured or given expired age.';
 
     /**
      * Execute the console command.
@@ -33,12 +33,20 @@ class CleanCacheCommand extends BaseCommand
     {
         $cacheExpiration = $this->option('expires-minutes');
 
+        if(! $cacheExpiration){
+            $cacheExpiration = config('laravel-directory-cleanup.directories')[get_cached_path()]["deleteAllOlderThanMinutes"];
+        }
+
         if ($this->option('force')) {
             $cacheExpiration = -1;
         }
 
         config([
-            'laravel-directory-cleanup.directories.'.config('view.compiled').'.deleteAllOlderThanMinutes' => $cacheExpiration,
+            'laravel-directory-cleanup.directories' => [
+                get_cached_path() => [
+                    "deleteAllOlderThanMinutes" => intval($cacheExpiration)
+                ]
+            ]
         ]);
 
         $this->call('clean:directories');

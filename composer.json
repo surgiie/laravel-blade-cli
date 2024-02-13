@@ -69,5 +69,5 @@
 
     "minimum-stability": "stable",
     "prefer-stable": true,
-    "bin": ["laravel-blade"]
+    "bin": ["builds/laravel-blade"]
 }

@@ -162,17 +162,15 @@ laravel-blade cache:clean --force
 
 ## Require Files Before Rendering
 
-If using `x-` blade components in your files, or you have some custom classes or logic you need to execute before rendering a file, you can use the `--require` option to require a file before rendering. This can be useful for loading custom classes or functions that can be used in your files. For convenience, a special `$__command` variable is available in the required file which contains the command instance, this can be useful for accessing the command's options and arguments or if you need output text to the console. Your variable data will also be available in the required file. You may also find the need to mutate the variable data before rendering, you can do this in the required file by returning the mutated variables in an array to be merged into the existing variable data.
+If you have custom code or logic you need to execute before rendering a file, you can use the `--require` option to require a file before rendering. This can be useful for loading custom classes or functions that can be used in your files. For convenience, a special `$__command` variable is available in the required file which contains the command instance, this can be useful for accessing the command's options and arguments or if you need output text to the console. Your variable data will also be available in the required file. You may also find the need to mutate the variable data before rendering, you can do this in the required file by returning the mutated variables in an array to be merged into the existing variable data.
 
 For example, if you have a file named `required-file.php` with the following content:
-
-```php
 
 ```bash
 larave-blade render template.yaml --name="Bob" --require="required-file.php"
 ```
 
-```bash
+```php
 <?php
 
 if($name == "Bob") {
@@ -209,7 +207,7 @@ You can also pass a directory path instead of a single file when running the com
 
 ### X-Blade Components
 
-### Anonymously Rendered Components
+### Anonymous Rendered Components
 
 If you are using  anonoymous `x-` blade components in your files, you must specify the `--component-path` option to specify a path to where your components are located.
 
@@ -221,7 +219,7 @@ in the components directory, you can use it in your files like so:
 <x-example :name="$name" />
 ```
 
-### Namespacing Anonymously Components
+### Namespacing Anonymous Components
 
 If you wish to use namespace components such as `<x-namespace::component-name />` you can use a `:` delimiter to specify the namespace and component name in the `--component-path` option.
 

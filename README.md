@@ -207,6 +207,8 @@ You can also pass a directory path instead of a single file when running the com
 
 ### X-Blade Components
 
+
+
 ### Anonymous Rendered Components
 
 If you are using  anonoymous `x-` blade components in your files, you must specify the `--component-path` option to specify a path to where your components are located.
@@ -224,6 +226,29 @@ in the components directory, you can use it in your files like so:
 If you wish to use namespace components such as `<x-namespace::component-name />` you can use a `:` delimiter to specify the namespace and component name in the `--component-path` option.
 
 For example, `--component-path="namespace:/home/components"`.
+
+### Class Based Components
+
+Since the CLI is not aware of your classes, it wont know how to resolve your components, to get around this you'll have to manually register your classes via `--require` file:
+
+```php
+
+<?php
+
+// require class or file that loads the classes, such as composer autoload file
+require_once "vendor/autoload.php";
+
+use App\View\Components\ExampleComponent;
+
+
+Blade::component('example', ExampleComponent::class);
+
+```
+Then you can use the component in your files like so:
+
+```html
+<x-example :name="$name" />
+```
 
 
 ### Contribute

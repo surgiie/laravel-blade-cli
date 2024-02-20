@@ -3,7 +3,7 @@
 # The version of laravel-blade to use.
 cli_version="0.1.0"
 # The temporary container name to use.
-container_name="laravel-laravel-blade-cli-$(date +%s)"
+container_name="laravel-blade-cli-$(date +%s)"
 # The file path to the directory/file to render.
 path="$1"
 shift

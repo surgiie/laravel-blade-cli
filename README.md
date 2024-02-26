@@ -46,10 +46,16 @@ address: 123 example lane
 ```
 
 
-## Rendering With Docker:
+## Run With Docker:
 
-If you don't have or want to install php, you can run render files using the provided script which will run the cli's `render` command in a temporary docker container and use volumes to mount the neccessary files and then sync them back to your machine:
+If you don't have or want to install php, you can run use the provided docker script to spin up a container which you can utilize the cli with.
 
+
+**Note** - This method of use does require you to mount the directory/files you need in order to render them. The working directory of the container is `/app` so you can mount your files to this directory.
+
+```bash
+
+### Install Docker Script:
 
 ```bash
 cd /tmp
@@ -58,10 +64,23 @@ wget https://raw.githubusercontent.com/surgiie/laravel-blade-cli/master/docker
 
 chmod +x ./docker
 
-mv ./docker /usr/local/bin/laravel-blade-render
+mv ./docker /usr/local/bin/laravel-blade
 
-laravel-blade-render <path> --var="example"
 ```
+
+Then you can render a file like so:
+
+```bash
+# mount the file to the container
+docker cp template laravel-blade-cli-0.1.0:/app/template
+
+laravel-blade render /app/template --var="example"
+
+# copy the rendered file back to your host
+docker cp laravel-blade-cli-0.1.0:/app/template.rendered ./template.rendered
+```
+
+Consider creating a bash function to ease the process of mounting and copying files to and from the container.
 
 
 ## Custom Filename

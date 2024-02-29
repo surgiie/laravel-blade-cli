@@ -49,10 +49,14 @@ EOF
 sha1sum=$(sha1sum Dockerfile | awk '{print $1}')
 image_tag="laravel-blade-cli:$cli_version-$sha1sum"
 
-# Build docker image for the cli if not already present or if specified.
+# Build docker image for the cli if not already present or allow with a flag to force build.
 if  [ -z "$(docker images -q $image_tag)" ] || [[ " $@ " =~ "--docker-build" ]]
 then
-    docker build -t $image_tag .
+    docker build -t $image_tag . --no-cache
+    if  [[ " $@ " =~ "--docker-build" ]]
+    then
+        exit 0;
+    fi
 fi
 if [ $? -ne 0 ];
 then

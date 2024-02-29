@@ -1,4 +1,4 @@
-# laravel-laravel-blade-cli
+# laravel-blade-cli
 Render and save textual files from the command line using Laravel's Blade engine.
 
 ![tests](https://github.com/surgiie/laravel-blade-cli/actions/workflows/tests.yml/badge.svg)
@@ -28,7 +28,7 @@ address: 123 example lane
 You can render this file using the following command:
 
 ```bash
-laravel-laravel-blade render ./person.yml \
+laravel-blade render ./person.yml \
                 --name="Bob" \
                 --relationship="Uncle" \
                 --favorite-food="Pizza" \

@@ -53,7 +53,7 @@ If you don't have or want to install php, you can run use the provided docker sc
 
 **Note** - This method of use does require you to mount the directory/files you need in order to render them. The working directory of the container is `/app` so you can mount your files to this directory.
 
-```bash
+
 
 ### Install Docker Script:
 

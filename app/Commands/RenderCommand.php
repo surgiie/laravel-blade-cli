@@ -309,6 +309,8 @@ class RenderCommand extends BaseCommand
 
         file_put_contents($saveTo, $contents);
 
+        $saveTo = str_replace("//", "/", $saveTo);
+
         $this->components->info("Rendered file: $saveTo");
 
         return $contents;

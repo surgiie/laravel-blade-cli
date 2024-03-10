@@ -72,12 +72,12 @@ Then you can render a file like so:
 
 ```bash
 # mount the file to the container
-docker cp template laravel-blade-cli-0.1.0:/app/template
+docker cp template laravel-blade-cli:/app/template
 
 laravel-blade render /app/template --var="example"
 
 # copy the rendered file back to your host
-docker cp laravel-blade-cli-0.1.0:/app/template.rendered ./template.rendered
+docker cp laravel-blade-cli:/app/template.rendered ./template.rendered
 ```
 
 Consider creating a bash function to ease the process of mounting and copying files to and from the container.

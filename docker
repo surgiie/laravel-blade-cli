@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# The version of laravel-blade to use.
-cli_version="0.1.0"
 # The container name to use.
-container_name="laravel-blade-cli-$cli_version"
+container_name="laravel-blade-cli"
 
 # Is TTY supported?
 test -t 1 && USE_TTY="-t"
@@ -14,15 +12,6 @@ mkdir -p $workspace
 
 cd $workspace
 
-# Write temporary build/dependency files to do the build.
-cat > composer.json <<EOF
-{
-    "require": {
-        "surgiie/laravel-blade-cli": "^$cli_version"
-    }
-}
-EOF
-
 cat > Dockerfile <<EOF
 FROM php:8.3-cli-alpine
 
@@ -32,8 +21,6 @@ WORKDIR /app
 ARG PHP_EXTS="pcntl"
 ARG DEBIAN_FRONTEND=noninteractive
 
-COPY --chown=php:php composer.json composer.json
-
 RUN apk --no-cache update \\
     && docker-php-ext-install -j\$(nproc) \${PHP_EXTS} \\
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \\
@@ -41,13 +28,13 @@ RUN apk --no-cache update \\
 
 USER php
 
-RUN composer install
+RUN composer require surgiie/laravel-blade-cli
 ENV PATH=\$PATH:/app/vendor/bin
 
 EOF
 # Create a sha1sum of the Dockerfile to use to suffix the image tag so if any changes to dockerfile are made, a new image is built.
 sha1sum=$(sha1sum Dockerfile | awk '{print $1}')
-image_tag="laravel-blade-cli:$cli_version-$sha1sum"
+image_tag="laravel-blade-cli:$sha1sum"
 
 # Build docker image for the cli if not already present or allow with a flag to force build.
 if  [ -z "$(docker images -q $image_tag)" ] || [[ " $@ " =~ "--docker-build" ]]

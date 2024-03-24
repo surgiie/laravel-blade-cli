@@ -308,7 +308,6 @@ class RenderCommand extends BaseCommand
         @mkdir($saveDirectory, recursive: true);
 
         file_put_contents($saveTo, $contents);
-
         $saveTo = str_replace("//", "/", $saveTo);
 
         $this->components->info("Rendered file: $saveTo");

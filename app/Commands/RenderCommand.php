@@ -36,6 +36,7 @@ class RenderCommand extends BaseCommand
                             {--cache-path= : Custom directory for the compiled/cached files. }
                             {--from-env=* : A .env file to load variable data from. }
                             {--dry-run : Print out rendered file contents only. }
+                            {--skip-existing : Simply skips existing rendered files instead of exiting. }
                             {--no-cache : Force recompile file & dont keep compiled file after render. }
                             {--force : Force render or overwrite existing files.}';
 
@@ -199,13 +200,11 @@ class RenderCommand extends BaseCommand
 
     /**
      * Register possible view path in the view's configuration for
-     * the engine to be able to find the file in the given path. Returns
-     * the full directory of the file path.
+     * the engine to be able to find the file in the given path
+     * and returns the full directory of the file path.
      */
     public function registerFilePath(string $path): string
     {
-        // dont use realpath on phar file paths as it will always be false, since phar files are virtual.
-        // TODO:  $directory = str_starts_with($path, 'phar://') ? dirname($path) : realpath(dirname($path));
         $directory = realpath(dirname($path));
 
         config(['view.paths' => array_merge(config('view.paths'), [$directory])]);
@@ -238,7 +237,7 @@ class RenderCommand extends BaseCommand
     /**
      * Render the given file using the given variables.
      */
-    public function renderFile(string $path, array $vars = [], ?string $saveTo = null): string
+    public function renderFile(string $path, array $vars = [], ?string $saveTo = null): string|bool
     {
         $currentDirectory = getcwd();
 
@@ -256,6 +255,11 @@ class RenderCommand extends BaseCommand
 
         if ($this->option('dry-run')) {
             $saveTo = false;
+        }
+
+        if($this->option('skip-existing') && is_file($saveTo)) {
+            $this->components->info("Skipped existing file: $saveTo");
+            return false;
         }
 
         if (is_file($saveTo) && ! $this->option('force')) {

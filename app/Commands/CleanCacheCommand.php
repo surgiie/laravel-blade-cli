@@ -33,8 +33,8 @@ class CleanCacheCommand extends BaseCommand
     {
         $cacheExpiration = $this->option('expires-minutes');
 
-        if(! $cacheExpiration){
-            $cacheExpiration = config('laravel-directory-cleanup.directories')[get_cached_path()]["deleteAllOlderThanMinutes"];
+        if (! $cacheExpiration) {
+            $cacheExpiration = config('laravel-directory-cleanup.directories')[get_cached_path()]['deleteAllOlderThanMinutes'];
         }
 
         if ($this->option('force')) {
@@ -44,9 +44,9 @@ class CleanCacheCommand extends BaseCommand
         config([
             'laravel-directory-cleanup.directories' => [
                 get_cached_path() => [
-                    "deleteAllOlderThanMinutes" => intval($cacheExpiration)
-                ]
-            ]
+                    'deleteAllOlderThanMinutes' => intval($cacheExpiration),
+                ],
+            ],
         ]);
 
         $this->call('clean:directories');

@@ -219,11 +219,11 @@ class RenderCommand extends BaseCommand
     {
         $variables = [];
 
-        foreach ( $this->option('from-yaml', []) as $file) {
+        foreach ($this->option('from-yaml', []) as $file) {
             $variables = array_merge($variables, Yaml::parseFile($file));
         }
 
-        foreach ( $this->option('from-json', []) as $file) {
+        foreach ($this->option('from-json', []) as $file) {
             $variables = array_merge($variables, $this->loadJsonFile($file));
         }
 
@@ -257,8 +257,9 @@ class RenderCommand extends BaseCommand
             $saveTo = false;
         }
 
-        if($this->option('skip-existing') && is_file($saveTo)) {
+        if ($this->option('skip-existing') && is_file($saveTo)) {
             $this->components->info("Skipped existing file: $saveTo");
+
             return false;
         }
 
@@ -312,7 +313,7 @@ class RenderCommand extends BaseCommand
         @mkdir($saveDirectory, recursive: true);
 
         file_put_contents($saveTo, $contents);
-        $saveTo = str_replace("//", "/", $saveTo);
+        $saveTo = str_replace('//', '/', $saveTo);
 
         $this->components->info("Rendered file: $saveTo");
 

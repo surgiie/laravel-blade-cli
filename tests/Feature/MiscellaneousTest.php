@@ -247,7 +247,6 @@ it('validates save directory must not be directory being processed', function ()
     ])->expectsOutputToContain('The path being processed is also the --save-to directory, use a different save directory.');
 });
 
-
 it('can render files in directory', function () {
     @mkdir(test_workspace_path('directory'));
 
@@ -358,9 +357,9 @@ it('can dry run render', function () {
         'path' => $path,
         '--name' => 'Doug',
         '--dry-run' => true,
-    ])->expectsOutputToContain("DRY RUN")
-      ->expectsOutputToContain("name: Doug")
-      ->assertExitCode(0);
+    ])->expectsOutputToContain('DRY RUN')
+        ->expectsOutputToContain('name: Doug')
+        ->assertExitCode(0);
 
     expect(is_file(test_workspace_path("$name.rendered.yaml")))->toBeFalse();
 });

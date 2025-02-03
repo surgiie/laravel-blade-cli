@@ -1,7 +1,16 @@
 #!/bin/bash
+set -euo pipefail
+command="${1:-}"
+path="${2:-}"
 
+if [ -z "$path" ]; then
+    echo "Usage: $0 <path> [options]"
+    exit 1
+fi
+
+version="0.1.0"
 # The container name to use.
-container_name="laravel-blade-cli"
+container_name="laravel-blade-cli-$version"
 
 # Is TTY supported?
 test -t 1 && USE_TTY="-t"
@@ -28,22 +37,16 @@ RUN apk --no-cache update \\
 
 USER php
 
-RUN composer require surgiie/laravel-blade-cli
+RUN composer require surgiie/laravel-blade-cli:$version
 ENV PATH=\$PATH:/app/vendor/bin
 
 EOF
-# Create a sha1sum of the Dockerfile to use to suffix the image tag so if any changes to dockerfile are made, a new image is built.
-sha1sum=$(sha1sum Dockerfile | awk '{print $1}')
-image_tag="laravel-blade-cli:$sha1sum"
+image_tag="laravel-blade-cli:$version"
 
 # Build docker image for the cli if not already present or allow with a flag to force build.
-if  [ -z "$(docker images -q $image_tag)" ] || [[ " $@ " =~ "--docker-build" ]]
+if  [ -z "$(docker images -q $image_tag)" ]
 then
     docker build -t $image_tag . --no-cache
-    if  [[ " $@ " =~ "--docker-build" ]]
-    then
-        exit 0;
-    fi
 fi
 if [ $? -ne 0 ];
 then
@@ -64,5 +67,82 @@ then
     docker run --name $container_name -i ${USE_TTY} -d --user $(id -u):$(id -g) $image_tag tail -f /dev/null > /dev/null
 fi
 
-# Then run the command in the container.
-docker exec -i ${USE_TTY} $container_name "laravel-blade" "${@}"
+cli_args=""
+save_to=""
+shift
+shift
+for arg in "$@"; do
+    if [[ $arg == --save-to=* ]]; then
+        save_to="${arg#--save-to=}"
+    else
+        cli_args="$cli_args $arg"
+        continue
+    fi
+done
+
+if [ "$command" != "render" ]; then
+    docker exec -i ${USE_TTY} $container_name "laravel-blade" "$command" "${@}"
+    exit $?
+fi
+
+if [[ ! -f $path ]] && [[ ! -d $path ]];
+then
+    echo "The $path file or directory doesnt exist."
+    exit 1;
+fi
+
+docker exec -i ${USE_TTY} $container_name rm -rf /app/files
+docker exec -i ${USE_TTY} $container_name mkdir -p /app/files
+docker cp $path $container_name:/app/files/$path > /dev/null
+
+if [ $? -ne 0 ];
+then
+    echo "Failed to copy the render file $path to container"
+    exit 1
+fi
+
+docker exec -i ${USE_TTY} $container_name "laravel-blade" "render" "/app/files/$path" ${cli_args[@]}
+if [ $? -ne 0 ];
+then
+    echo "Failed to render the file $path"
+    exit 1
+fi
+
+
+if [ ! -z "$save_to" ]; then
+    rendered_filename=$save_to
+else
+
+    extension="${path##*.}"
+    if [[ "$path" == *.* ]]; then
+        extension="${filename##*.}"
+    else
+        extension=""  # No extension
+    fi
+
+    if [ ! -z "$extension" ]; then
+        base_name=$(basename $path .$extension)
+        rendered_filename=$base_name.rendered.$extension
+        host_filename=$rendered_filename
+    else
+        rendered_filename=$path.rendered
+        host_filename=$path.rendered
+    fi
+fi
+
+if [ -z $save_to ];
+then
+    docker cp $container_name:/app/files/$rendered_filename $host_filename > /dev/null
+else
+    echo "TODO SAVE CUSTOM"
+    # dir_name=$(dirname $save_to)
+    # mkdir -p $dir_name
+    # docker cp $container_name:$save_to $filename > /dev/null
+fi
+
+# if [ $? -ne 0 ];
+# then
+#     echo "Failed to copy the rendered file $filename"
+#     exit 1
+# fi
+echo "Rendered file $host_filename"

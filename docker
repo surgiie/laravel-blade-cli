@@ -1,22 +1,27 @@
 #!/bin/bash
 set -euo pipefail
+# the command and render file path.
 command="${1:-}"
 path="${2:-}"
 
-if [ -z "$path" ]; then
-    echo "Usage: $0 <path> [options]"
-    exit 1
-fi
-
+# the cli version to use
 version="0.1.0"
 # The container name to use.
 container_name="laravel-blade-cli-$version"
 
+if [ -z "$path" ] && [ -z "$command" ]; then
+    echo "Usage: $0 <command> [options]"
+    exit 1
+fi
+if ! docker info >/dev/null 2>&1; then
+    echo "Docker is not running"
+    exit 1
+fi
 # Is TTY supported?
 test -t 1 && USE_TTY="-t"
 
 # Create a workspace area for temporary files to do build with.
-workspace="./.laravel-blade-cli"
+workspace="/tmp/.laravel-blade-cli"
 mkdir -p $workspace
 
 cd $workspace
@@ -67,6 +72,24 @@ then
     docker run --name $container_name -i ${USE_TTY} -d --user $(id -u):$(id -g) $image_tag tail -f /dev/null > /dev/null
 fi
 
+if [ "$command" != "render" ]; then
+    shift
+    docker exec -i ${USE_TTY} $container_name "laravel-blade" "$command" "${@}"
+    exit $?
+fi
+
+if [ -z $path ];
+then
+    echo "Please provide a file or directory path to render"
+    exit 1
+fi
+
+if [[ ! -f $path ]] && [[ ! -d $path ]];
+then
+    echo "The $path file or directory doesnt exist."
+    exit 1;
+fi
+
 cli_args=""
 save_to=""
 shift
@@ -80,17 +103,17 @@ for arg in "$@"; do
     fi
 done
 
-if [ "$command" != "render" ]; then
-    docker exec -i ${USE_TTY} $container_name "laravel-blade" "$command" "${@}"
-    exit $?
-fi
+# expand home
+save_to="${save_to/#\~/$HOME}"
 
-if [[ ! -f $path ]] && [[ ! -d $path ]];
+if [ -z $save_to ] && [ -d $path ];
 then
-    echo "The $path file or directory doesnt exist."
-    exit 1;
+    echo "The --save-to option is required when rendering all files in a directory."
+    exit 1
 fi
 
+
+# prepare workspace
 docker exec -i ${USE_TTY} $container_name rm -rf /app/files
 docker exec -i ${USE_TTY} $container_name mkdir -p /app/files
 docker cp $path $container_name:/app/files/$path > /dev/null
@@ -101,48 +124,60 @@ then
     exit 1
 fi
 
+# check if the path is a directory and save to a directory to copy back to host, its required by cli
+if [ -d $path ];
+then
+    cli_args="$cli_args --save-to=/app/files/directory"
+fi
+
+echo "Container Output:"
 docker exec -i ${USE_TTY} $container_name "laravel-blade" "render" "/app/files/$path" ${cli_args[@]}
+
 if [ $? -ne 0 ];
 then
     echo "Failed to render the file $path"
-    exit 1
+    exit $?
 fi
 
+# if rendering a directory, copy the directory back to host
+if [ -d $path ];
+then
+    docker cp $container_name:/app/files/directory $save_to > /dev/null
+    if [ $? -ne 0 ];
+    then
+        echo "Failed to copy the rendered directory back to host"
+        exit $?
+    fi
+    echo "Rendered and synced directory back to host: $save_to"
+    exit 0
+fi
+# exit 0;
 
-if [ ! -z "$save_to" ]; then
-    rendered_filename=$save_to
-else
-
+extension="${path##*.}"
+if [[ "$path" == *.* ]]; then
     extension="${path##*.}"
-    if [[ "$path" == *.* ]]; then
-        extension="${filename##*.}"
-    else
-        extension=""  # No extension
-    fi
-
-    if [ ! -z "$extension" ]; then
-        base_name=$(basename $path .$extension)
-        rendered_filename=$base_name.rendered.$extension
-        host_filename=$rendered_filename
-    else
-        rendered_filename=$path.rendered
-        host_filename=$path.rendered
-    fi
+else
+    extension=""  # No extension
+fi
+if [ ! -z "$extension" ]; then
+    base_name=$(basename $path .$extension)
+    container_rendered_filename=$base_name.rendered.$extension
+else
+    container_rendered_filename=$path.rendered
 fi
 
 if [ -z $save_to ];
 then
-    docker cp $container_name:/app/files/$rendered_filename $host_filename > /dev/null
-else
-    echo "TODO SAVE CUSTOM"
-    # dir_name=$(dirname $save_to)
-    # mkdir -p $dir_name
-    # docker cp $container_name:$save_to $filename > /dev/null
+   save_to=$container_rendered_filename
 fi
 
-# if [ $? -ne 0 ];
-# then
-#     echo "Failed to copy the rendered file $filename"
-#     exit 1
-# fi
-echo "Rendered file $host_filename"
+dir_name=$(dirname $save_to)
+mkdir -p $dir_name
+docker cp $container_name:/app/files/$container_rendered_filename $save_to > /dev/null
+
+if [ $? -ne 0 ];
+then
+    echo "Failed to copy the rendered file $filename"
+    exit 1
+fi
+echo "Rendered and synced file back to host: $save_to"

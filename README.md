@@ -1,11 +1,8 @@
 # laravel-blade-cli
-Render and save textual files from the command line using Laravel's Blade engine.
+
+An unofficial php command-line interface for [Laravel Blade](https://laravel.com/docs/11.x/blade).
 
 ![tests](https://github.com/surgiie/laravel-blade-cli/actions/workflows/tests.yml/badge.svg)
-
-# Introduction
-
-An PHP command-line interface for [Laravel Blade](https://laravel.com/docs/10.x/blade) to render template text files from your command line. Embed any Laravel Blade syntax in any text file and render it with this CLI. It's the perfect for generating CI/CD configuration files, configuration files, code templates, you name it.
 
 
 ## Installation
@@ -15,7 +12,8 @@ To install, use composer globally:
 `composer global require surgiie/laravel-blade-cli`
 
 ## Use
-As an example, let's say you have a file named `person.yml` in your current directory with the following content:
+
+Let's say you have a file named `person.yml` in your current directory with the following content:
 
 ```yaml
 name: {{ $name }}
@@ -50,11 +48,6 @@ address: 123 example lane
 
 If you don't have or want to install php, you can run use the provided docker script to spin up a container which you can utilize the cli with.
 
-
-**Note** - This method of use does require you to mount the directory/files you need in order to render them. The working directory of the container is `/app` so you can mount your files to this directory.
-
-
-
 ### Install Docker Script:
 
 ```bash
@@ -71,17 +64,11 @@ mv ./docker /usr/local/bin/laravel-blade
 Then you can render a file like so:
 
 ```bash
-# mount the file to the container
-docker cp template laravel-blade-cli:/app/template
-
-laravel-blade render /app/template --var="example"
-
-# copy the rendered file back to your host
-docker cp laravel-blade-cli:/app/template.rendered ./template.rendered
+laravel-blade render /some/local/file/or/directory --var="example"
 ```
+**Note** - The script will automatically mount the file or directory to the container and sync the rendered file back to the host machine.
 
-Consider creating a bash function to ease the process of mounting and copying files to and from the container.
-
+**Note** - You will need to mount any files to load variable data from to the running container to utilize the `--from-*` options as documented below.
 
 ## Custom Filename
 By default, all files will be saved to the same directory as the file being rendered with the name `<filename>.rendered.<extension>` or simply `<filename>.rendered` if no extension is present, this is to prevent overwriting the original file. To use a custom file name or change the directory, use the `--save-to` option to specify a file path:

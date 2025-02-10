@@ -1,5 +1,5 @@
 # laravel-blade-cli
-Render and save textual files from the command line using Laravel's Blade engine.
+Render files from the command line using Laravel's Blade templating engine.
 
 ![tests](https://github.com/surgiie/laravel-blade-cli/actions/workflows/tests.yml/badge.svg)
 

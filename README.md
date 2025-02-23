@@ -58,14 +58,8 @@ If you don't have or want to install php, you can run use the provided docker sc
 ### Install Docker Script:
 
 ```bash
-cd /tmp
-
-wget https://raw.githubusercontent.com/surgiie/laravel-blade-cli/master/docker
-
-chmod +x ./docker
-
-mv ./docker /usr/local/bin/laravel-blade
-
+# Assumes $PATH includes $HOME/.local/bin, add or customize as needed
+desired_version=0.1.0 && wget -qO $HOME/.local/bin/laravel-blade https://raw.githubusercontent.com/surgiie/laravel-blade-cli/refs/tags/v$desired_version/docker && chmod +x $HOME/.local/bin/laravel-blade
 ```
 
 Then you can render a file like so:

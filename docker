@@ -15,11 +15,14 @@ cd $workspace
 cat > Dockerfile <<EOF
 FROM php:8.3-cli-alpine
 
-RUN addgroup -g 1000 php && adduser -u 1000 -S php -G php
 
 WORKDIR /app
 ARG PHP_EXTS="pcntl"
 ARG DEBIAN_FRONTEND=noninteractive
+ARG UID=1000
+ARG GID=1000
+
+RUN addgroup -g \$GID php && adduser -u \$UID -S php -G php
 
 RUN apk --no-cache update \\
     && docker-php-ext-install -j\$(nproc) \${PHP_EXTS} \\
@@ -39,16 +42,16 @@ image_tag="laravel-blade-cli:$sha1sum"
 # Build docker image for the cli if not already present or allow with a flag to force build.
 if  [ -z "$(docker images -q $image_tag)" ] || [[ " $@ " =~ "--docker-build" ]]
 then
-    docker build -t $image_tag . --no-cache
+    docker build -t $image_tag . --no-cache --build-arg UID=$(id -u) --build-arg GID=$(id -g)
     if  [[ " $@ " =~ "--docker-build" ]]
     then
         exit 0;
     fi
-fi
-if [ $? -ne 0 ];
-then
-    echo "Failed to build docker image $image_tag"
-    exit 1
+    if [ $? -ne 0 ];
+    then
+        echo "Failed to build docker image $image_tag"
+        exit 1
+    fi
 fi
 
 # Change back to the original directory after we have built the docker image.
@@ -61,7 +64,7 @@ if [ ! "$( docker container inspect -f '{{.State.Running}}' $container_name 2>/d
 then
     # remove dangling containers that may have exited but still show up during docker ps -a
     docker ps -a | grep $container_name > /dev/null && docker rm $container_name > /dev/null
-    docker run --name $container_name -i ${USE_TTY} -d $image_tag tail -f /dev/null > /dev/null
+    docker run --name $container_name -i ${USE_TTY} -d --user $(id -u):$(id -g) $image_tag tail -f /dev/null > /dev/null
 fi
 
 # Then run the command in the container.
